@@ -233,6 +233,100 @@ namespace Building
 
     }
 
+    class Plane : Transport
+    {
+        bool flag = true;    //прервать движение если один из параметров достиг минимума
+
+        /// <summary>
+        /// Создаем Самолет
+        /// </summary>
+        /// <param name="driver"></param>
+        public Plane (Driver driver) : base(50d,1000,'P',10000) { this.driver = driver; }
+
+        /// <summary>
+        /// Сообщение о снижение характеристики ниже критического значения
+        /// </summary>
+        private string writeMessage()
+        {
+            string msg = "";
+            if (gas < 0.25)
+            {
+                msg += " Топливо на нуле! Мы не дотянем до дозаправки! Мы падаем!";
+                health = 0;
+                flag = false;
+            }
+            else
+            {
+                if (maxDistance < 1)
+                {
+                    msg += " Требуется экстренная посадка! Необходимо произвести обслуживание систем!";
+                    health -= 100;
+                    flag = false;
+                }
+                else
+                {
+                    if (health <= 0)
+                    {
+                        msg += " Отказ всех систем! Мы падаем!";
+                        flag = false;
+                    }
+                }
+            }
+            return msg;
+        }
+
+        /// <summary>
+        /// Двигает самолет и расходует ресурсы
+        /// </summary>
+        /// <param name="range">Дистанция перемещения в киллометрах</param>
+        public override void move(int range)
+        {
+            for (; range > 0; range--)
+            {
+                Console.WriteLine(writeMessage());
+                if (flag == false) { return; }                
+                gas -= 0.25;
+                if (driver < Driver.VETERAN)
+                {
+                    health = 0;
+                }
+                else
+                {
+                    if (driver == Driver.VETERAN)
+                    {
+                        health -= 20;
+                        distance--;
+                    }
+                    if (driver == Driver.PROFESSIONAL)
+                    {
+                        health -= 10;
+                        distance-=2;
+                    }
+
+                }
+            }
+        }
+
+        public override void refuel(double volume)
+        {
+            gas += volume;
+        }
+
+        public override void rest(int time)
+        {
+            
+            if (time>=60)
+            {
+                distance = maxDistance;
+                Console.WriteLine("Диагностика систем прошла успешно. Можем лететь");
+            }
+            else
+            {
+                Console.WriteLine("Недостаточно времени на диагностику систем");
+            }
+        }
+    }
+
 
 
 
