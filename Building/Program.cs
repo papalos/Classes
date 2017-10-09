@@ -17,6 +17,8 @@ namespace Building
             Console.WriteLine(Office.getFloor()+" "+Office.getLodgers());
             Console.WriteLine(House.getFloor());
 
+            Console.WriteLine("{0,10:d};{1,10:d};{2,10:d}",1,100,1000,10000);
+
             return;
         }
     }
