@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Building
 {
+    /* Класс для задания зданий трех типов Офисов, Жилиых Домов и Складских Помещений */
     class Building
     {
         private uint floor;          //Количество этажей здания
@@ -20,6 +17,7 @@ namespace Building
         /// <param name="lodgers">Количество жильцов</param>
         public Building(uint floor, double square, uint lodgers)
         {
+            /* Проверяем допустимость значений */
             if (floor < 1)
             {
                 throw new Exception("Отсутствие этажей у здания");
@@ -49,6 +47,8 @@ namespace Building
             
         }
 
+
+        /* -------------- Геттеры для этажей, площади и количества жильцов ---------- */
         public uint getFloor()
         {
             return floor;
@@ -63,8 +63,11 @@ namespace Building
         {
             return lodgers;
         }
+        /* -------------------------------------------------------------------------- */
+
 
         /// <summary>
+        /// Определяет тип здания по заданным при строительстве параметрам:
         /// Жильцы наличиствуют только в жилых зданиях,
         /// Складские помещения - одноэтажные,
         /// Офисные здания - многоэтажные и в них никто не проживает.

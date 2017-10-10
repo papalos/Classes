@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Building
 {
+    /* Возможные уровни навыка вождения */
     enum Driver { FOOL = 0, NORMAL, VETERAN, PROFESSIONAL};
 
 
-    /* ---------------- Абстрактный класс Транспорт, родительский для остальных ----------------------- */
+    /********************************************* Абстрактный класс Транспорт, родительский для остальных *******************************************/
 
     abstract class Transport
     {
@@ -20,14 +17,22 @@ namespace Building
         protected char document;                    //Категория прав 
         protected int health;                       //Износ  в единицах здоровья
 
-        /* Сообщения для метода writeMessage() информирующего о достижении придельных значений */
+        /* Сообщения для метода writeMessage() информирующего о достижении предельных значений свои в каждом дочернем классе */
         protected string lowGas;                    
         protected string lowDistance;
         protected string lowHealth;
 
-        protected bool flag = true;    //прервать движение если один из параметров достиг минимума
+        protected bool flag = true;    // прервать движение если один из параметров достиг минимума, определяет срабатывания условия по смене флага
         
-
+        
+        /// <summary>
+        /// Конструктор базового класса
+        /// </summary>
+        /// Исходные значения
+        /// <param name="gas">Количество топлива</param>
+        /// <param name="maxDistance">Максимально возможное расстояние до тех обслуживания</param>
+        /// <param name="document"> Категория водительских прав </param>
+        /// <param name="health"> Единицы здоровья убывающие в соответствии с навыком воздения и пройденным расстоянием </param>
         public Transport(double gas, int maxDistance, char document, int health)
         {
             this.gas = gas;
@@ -36,6 +41,8 @@ namespace Building
             this.health = health;
         }
 
+
+        /* ------------------------ Геттеры для полей класса ------------------------ */
         public double getGas()
         {
             return gas;
@@ -55,9 +62,11 @@ namespace Building
         {
             return health;
         }
+        /* -------------------------------------------------------------------------- */
+
 
         /// <summary>
-        /// Сообщение о снижение характеристики ниже критического значения
+        /// Метод сообщающий о снижение характеристики ниже критического значения
         /// </summary>
         protected string writeMessage()
         {
@@ -87,36 +96,38 @@ namespace Building
         }
 
         /// <summary>
-        /// Описывает движение транспорта
+        /// Описывает движение транспорта (переопределяемый метод)
         /// </summary>
         /// <param name="range">дистанция передвижения в км.</param>
         abstract public int move(int range);
 
         /// <summary>
-        /// Заправка или кормежка
+        /// Заправка или кормежка  (переопределяемый метод)
         /// </summary>
         /// <param name="volume">объем топлива в литрах или в кг (для повозки)</param>
         abstract public void refuel(double volume);
 
         /// <summary>
-        /// Отдых для востановления запаса хода
+        /// Отдых для востановления запаса хода (переопределяемый метод)
         /// </summary>
         /// <param name="time">время отдыха в минутах</param>
         abstract public void rest(int time);
     }
 
 
-    /* -------------------- Повозка -------------------------- */
+    /************************************************************* Повозка **************************************************************************/
 
-    class Wagon : Transport
+    class Wagon : Transport             // Наследуемся от Transport
     {
         /// <summary>
         /// Создаем Лошадь 
+        /// Характеристики создаваемого ТС заданы жестко в вызываемом конструкторе безового класса
         /// </summary>
-        /// <param name="driver"></param>
+        /// <param name="driver">Тип навыка вождения управляющего данным ТС</param>
         public Wagon(Driver driver) : base(4d,10,'N',100)
         {
             this.driver = driver;
+            /* Определяем поля необходимые для вывода критических сообщений */
             this.lowGas = " Лошадь не может двигаться, она голодна. Покорми ее!";
             this.lowDistance = " Лошадь не может больше идти, она устала. Ей нужен отдых!";
             this.lowHealth = " Лошадь - старая, она скоро сдохнет!";
@@ -128,11 +139,20 @@ namespace Building
         /// <param name="range">Дистанция перемещения в киллометрах</param>
         public override int move(int range)
         {
-            for ( ; range>0; range--)
+            int start = range;                // Сохнаряем изначально заданное количества движения, range изменится в соответсвии с пройденным до поломки расстоянием
+            string msg = "";                  // Переменна для информации полученной из writeMessage() при условии поломок
+
+            for (; range > 0; range--)
             {
-                Console.WriteLine(writeMessage());
-                if (flag == false) { break; }
-                distance--;
+                msg = writeMessage();        // Проверяем на поломки методом  writeMessage(), сохраняя сведения о ник в переменной msg и меняя при их возникновении flag см. реализацию метода
+
+                if (flag == false)                     // Если флаг сменен  на false, значит возникла поломка
+                {
+                    Console.WriteLine(msg);            // Выводим сообщение о ней
+                    break;                             // И выходим из цикла
+                }
+                                                       // Если поломок не возникает уменьшаем характеристики за каждый пройденный километр в соответствии с условиями
+                distance--;                            
                 gas -= 0.25;
                 if(driver == Driver.FOOL)
                 {
@@ -143,9 +163,13 @@ namespace Building
                     health -= 2;
                 }
             }
-            return range;
+            return start-range;               // По завершению работы метода возвращаем количество километров которое удалось пройти
         }
 
+        /// <summary>
+        /// Заправка топливом ТС
+        /// </summary>
+        /// <param name="volume">Количество топлива или еды</param>
         public override void refuel(double volume)
         {
             gas += volume;
@@ -166,8 +190,9 @@ namespace Building
 
     }
 
+    /* !!!!!!!!!!!!!!!!!!!!!! Остальные классы реализованы соответственно классу Wagon !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 
-    /* --------------------- Машина ------------------------ */
+    /************************************************************* Машина ***************************************************************************/
 
     class Car : Transport
     {
@@ -189,10 +214,18 @@ namespace Building
         /// <param name="range">Дистанция перемещения в киллометрах</param>
         public override int move(int range)
         {
+            int start = range;
+            string msg = "";
             for (; range > 0; range--)
             {
-                Console.WriteLine(writeMessage());
-                if (flag == false) { break; }
+                msg = writeMessage();
+                
+                if (flag == false)
+                {
+                    Console.WriteLine(msg);
+                    break;
+                }
+
                 distance--;
                 gas -= 0.5;
                 if (driver == Driver.FOOL)
@@ -203,15 +236,15 @@ namespace Building
                 {
                     if (driver == Driver.NORMAL)
                     {
-                        health -= 25;
+                        health -= 7;
                     }
                     else
                     {
-                        health -= 5;
+                        health -= 3;
                     }
                 }
             }
-            return range;
+            return start-range;
         }
 
         public override void refuel(double volume)
@@ -236,7 +269,7 @@ namespace Building
 
 
 
-    /* ---------------------- Самолет ------------------------------ */
+    /************************************************************ Самолет ****************************************************************************/
 
     class Plane : Transport
     {
@@ -258,10 +291,17 @@ namespace Building
         /// <param name="range">Дистанция перемещения в киллометрах</param>
         public override int move(int range)
         {
+            int start = range;
+            string msg = "";
             for (; range > 0; range--)
             {
-                Console.WriteLine(writeMessage());
-                if (flag == false) { break; }                
+                msg = writeMessage();
+
+                if (flag == false)
+                {
+                    Console.WriteLine(msg);
+                    break;
+                }
                 gas -= 0.25;
                 if (driver < Driver.VETERAN)
                 {
@@ -282,7 +322,7 @@ namespace Building
 
                 }
             }
-            return range;
+            return start-range;
         }
 
         public override void refuel(double volume)
@@ -306,7 +346,8 @@ namespace Building
     }
 
 
-    /* ------------------------------ Катер ------------------------------ */
+
+    /*************************************************************** Катер **************************************************************************/
     class MotorBoat : Transport
     {
         /// <summary>
@@ -327,10 +368,17 @@ namespace Building
         /// <param name="range">Дистанция перемещения в киллометрах</param>
         public override int move(int range)
         {
+            int start = range;
+            string msg = "";
             for (; range > 0; range--)
             {
-                Console.WriteLine(writeMessage());
-                if (flag == false) { break; }
+                msg = writeMessage();
+
+                if (flag == false)
+                {
+                    Console.WriteLine(msg);
+                    break;
+                }
                 gas -= 1;
                 if (driver != Driver.FOOL)
                 {
@@ -342,7 +390,7 @@ namespace Building
                     health = 0;
                 }
             }
-            return range;
+            return start-range;
         }
 
         public override void refuel(double volume)
